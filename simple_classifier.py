@@ -8,10 +8,6 @@ from collections import Counter
 
 # stemmer = nltk.LancasterStemmer()
 stemmer = nltk.SnowballStemmer("english", ignore_stopwords=True)  # Better stemming
-
-
-
-
 ##############################################
 
 def create_validation_set(filename, valid_set=0.05):
