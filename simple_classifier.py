@@ -1,7 +1,7 @@
 import xlrd
 import string
 from numpy import *
-from sklearn.feature_extraction.text import CountVectorizer
+#from sklearn.feature_extraction.text import CountVectorizer
 import nltk
 from nltk.corpus import stopwords # Import the stop word list
 from collections import Counter
@@ -10,15 +10,52 @@ from collections import Counter
 stemmer = nltk.SnowballStemmer("english", ignore_stopwords=True)  # Better stemming
 
 
-def extract_words(filename, stopwords):
+
+
+##############################################
+
+def create_validation_set(filename, valid_set=0.05):
     book = xlrd.open_workbook(filename)
     sheet = book.sheet_by_index(0)
     cells = sheet.col(colx=1)
+    i = 1/valid_set
+    k = 0
+    set_val = []
+    for c in cells:
+        if k % i == 0:
+            translator = str.maketrans('', '', string.punctuation)
+            sentence = c.value.lower().translate(translator)
+            #print('%f : %s \n',i,sentence)
+            set_val.append(sentence)
+        k+=1
+    return set_val
+    
+    
+    
+    
+def create_training_set(filename,valid_set = 0.05):
+    book = xlrd.open_workbook(filename)
+    sheet = book.sheet_by_index(0)
+    cells = sheet.col(colx=1)
+    i = 1/valid_set
+    k = 0
+    set_train = []
+    for c in cells:
+        if k % i != 0:
+            translator = str.maketrans('', '', string.punctuation)
+            sentence = c.value.lower().translate(translator)
+            #print('%f : %s \n',i,sentence)
+            set_train.append(sentence)
+        k+=1
+    return set_train
+
+
+##############################################
+
+def extract_words(list_tweets, stopwords):
     list_words = []
-    for cell in cells:
-        translator = str.maketrans('', '', string.punctuation)
-        sentence = cell.value.lower().translate(translator)
-        list_words += sentence.split()
+    for tweet in list_tweets:
+        list_words += tweet.split()
     return [stemmer.stem(w) for w in list_words if not stemmer.stem(w) in stopwords]  # Not optimal to stem two times
 
 
@@ -55,8 +92,20 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
              'y', 'ain', 'aren', 'couldn', 'didn', 'doesn', 'hadn', 'hasn', 'haven', 'isn', 'ma', 'mightn', 'mustn',
              'needn', 'shan', 'shouldn', 'wasn', 'weren', 'won', 'wouldn']
 
-words_trump = extract_words("tweets_DonaldTrump_2009-2017_16k.xlsx", stopwords)
-words_hillary = extract_words("tweets_HillaryClinton_2013-2017_4k.xlsx", stopwords)
+
+#############################
+percentage = 0.05
+
+list_trump_train = create_training_set("tweets_DonaldTrump_2009-2017_16k.xlsx",percentage)
+list_trump_val = create_validation_set("tweets_DonaldTrump_2009-2017_16k.xlsx",percentage)
+
+
+list_hillary_train = create_training_set("tweets_HillaryClinton_2013-2017_4k.xlsx",percentage)
+list_hillary_val = create_validation_set("tweets_HillaryClinton_2013-2017_4k.xlsx",percentage)
+
+
+words_trump = extract_words(list_trump_train, stopwords)
+words_hillary = extract_words(list_hillary_train, stopwords)
 
 nbr_of_words_trump = len(words_trump)
 nbr_of_words_hillary = len(words_hillary)
