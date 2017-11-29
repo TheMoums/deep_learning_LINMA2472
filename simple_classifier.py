@@ -1,11 +1,12 @@
 import xlrd
 import string
 from numpy import *
+import numpy as np
 #from sklearn.feature_extraction.text import CountVectorizer
 import nltk
 from nltk.corpus import stopwords # Import the stop word list
 from collections import Counter
-
+import random
 # stemmer = nltk.LancasterStemmer()
 stemmer = nltk.SnowballStemmer("english", ignore_stopwords=True)  # Better stemming
 
@@ -94,19 +95,50 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 
 
 #############################
-percentage = 0.05
-
-list_trump_train = create_training_set("tweets_DonaldTrump_2009-2017_16k.xlsx",percentage)
-list_trump_val = create_validation_set("tweets_DonaldTrump_2009-2017_16k.xlsx",percentage)
 
 
-list_hillary_train = create_training_set("tweets_HillaryClinton_2013-2017_4k.xlsx",percentage)
-list_hillary_val = create_validation_set("tweets_HillaryClinton_2013-2017_4k.xlsx",percentage)
+def create_data_save():
+    percentage = 0.05
+
+    list_trump_train = create_training_set("tweets_DonaldTrump_2009-2017_16k.xlsx",percentage)
+    list_hillary_train = create_training_set("tweets_HillaryClinton_2013-2017_4k.xlsx",percentage)
+    label_train_trump = ['Trump'] * len(list_trump_train)
+    label_train_hillary = ['Clinton'] * len(list_hillary_train)
+    
+    list_trump_val = create_validation_set("tweets_DonaldTrump_2009-2017_16k.xlsx",percentage)
+    list_hillary_val = create_validation_set("tweets_HillaryClinton_2013-2017_4k.xlsx",percentage)
+    label_val_trump = ['Trump'] * len(list_trump_val)
+    label_val_hillary = ['Clinton'] * len(list_hillary_val)
+    list_trump_train.append(list_hillary_train)
+    label_train_trump.append(label_train_hillary)
+    list_trump_val.append(list_hillary_val)
+    label_val_trump.append(label_val_hillary)
+    
+    training_set = make_tuple(list_trump_train,label_train_trump)
+    validation_set = make_tuple(list_trump_val,label_val_trump)
+    random.shuffle(training_set,random.random)
+    random.shuffle(validation_set,random.random)
+    # Should save it but I don't know how
+    #np.savez('sets',training_set,validation_set)
+    return training_set,validation_set
 
 
+def make_tuple(list1,list2):
+    if len(list1)==len(list2):
+        newlist = []
+        for i in range(0,len(list1)):
+            newlist.append((list1[i],list2[i]))
+        return newlist
+    else:
+        return None
+            
+
+
+############################
+
+"""
 words_trump = extract_words(list_trump_train, stopwords)
 words_hillary = extract_words(list_hillary_train, stopwords)
-
 nbr_of_words_trump = len(words_trump)
 nbr_of_words_hillary = len(words_hillary)
 
@@ -121,10 +153,11 @@ significant_difference = 0.002  # the difference of usage becomes significant wh
 filtered_trump = words_filter(most_common_words_trump, occurency_dict_trump, occurency_dict_hillary, bag_size, significant_difference)
 filtered_hillary = words_filter(most_common_words_hillary, occurency_dict_hillary, occurency_dict_trump, bag_size, significant_difference)
 
-print (filtered_trump)
+#print (filtered_trump)
 print (most_common_words_trump)
 #print (filtered_hillary)
-
+"""
+create_data_save()
 """
 vectorizer = CountVectorizer(analyzer = "word",   \
                              tokenizer = None,    \
