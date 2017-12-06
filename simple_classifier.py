@@ -1,15 +1,30 @@
+#  -*- coding: utf-8 -*-
+import re
 import xlrd
 import string
 from numpy import *
 import numpy as np
-#from sklearn.feature_extraction.text import CountVectorizer
 import nltk
-from nltk.corpus import stopwords # Import the stop word list
-from collections import Counter
+from collections import Counter, defaultdict
 import random
+import unicodedata
+
+
 # stemmer = nltk.LancasterStemmer()
 stemmer = nltk.SnowballStemmer("english", ignore_stopwords=True)  # Better stemming
 ##############################################
+
+all_chars = (chr(i) for i in range(0x110000))
+control_chars = ''.join(c for c in all_chars if unicodedata.category(c) == 'Cc')
+# control_chars += '\u2192'
+# control_chars = ''.join(map(chr, range(0, 32) + range(127, 160)))
+control_char_re = re.compile('[%s]' % re.escape(control_chars))
+
+
+
+def remove_control_chars(s):
+    return control_char_re.sub('', s)
+
 
 def create_validation_set(filename, valid_set=0.05):
     book = xlrd.open_workbook(filename)
@@ -20,17 +35,15 @@ def create_validation_set(filename, valid_set=0.05):
     set_val = []
     for c in cells:
         if k % i == 0:
-            translator = str.maketrans('', '', string.punctuation)
-            sentence = c.value.lower().translate(translator)
-            #print('%f : %s \n',i,sentence)
-            set_val.append(sentence)
-        k+=1
+            tweet = c.value.lower()
+            tweet = re.sub(r"http\S+", "", tweet)  # Remove URL
+            clean = re.sub('[^a-zA-Z0-9]+', ' ', tweet)  # Keep just letters and numbers
+            set_val.append(clean)
+        k += 1
     return set_val
     
-    
-    
-    
-def create_training_set(filename,valid_set = 0.05):
+
+def create_training_set(filename, valid_set = 0.05):
     book = xlrd.open_workbook(filename)
     sheet = book.sheet_by_index(0)
     cells = sheet.col(colx=1)
@@ -39,11 +52,11 @@ def create_training_set(filename,valid_set = 0.05):
     set_train = []
     for c in cells:
         if k % i != 0:
-            translator = str.maketrans('', '', string.punctuation)
-            sentence = c.value.lower().translate(translator)
-            #print('%f : %s \n',i,sentence)
-            set_train.append(sentence)
-        k+=1
+            tweet = c.value.lower()
+            tweet = re.sub(r"http\S+", "", tweet)  # Remove URL
+            clean = re.sub('[^a-zA-Z0-9]+', ' ', tweet)  # Keep just the letters
+            set_train.append(clean)
+        k += 1
     return set_train
 
 
@@ -87,7 +100,7 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
              'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than',
              'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now', 'd', 'll', 'm', 'o', 're', 've',
              'y', 'ain', 'aren', 'couldn', 'didn', 'doesn', 'hadn', 'hasn', 'haven', 'isn', 'ma', 'mightn', 'mustn',
-             'needn', 'shan', 'shouldn', 'wasn', 'weren', 'won', 'wouldn']
+             'needn', 'shan', 'shouldn', 'wasn', 'weren', 'won', 'wouldn', 'make', 'go']
 
 
 #############################
@@ -96,27 +109,45 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 def create_data_save():
     percentage = 0.05
 
-    list_trump_train = create_training_set("tweets_DonaldTrump_2009-2017_16k.xlsx",percentage)
-    list_hillary_train = create_training_set("tweets_HillaryClinton_2013-2017_4k.xlsx",percentage)
+    list_trump_train = create_training_set("tweets_DonaldTrump_2009-2017_16k.xlsx", percentage)
+    list_hillary_train = create_training_set("tweets_HillaryClinton_2013-2017_4k.xlsx", percentage)
     label_train_trump = ['Trump'] * len(list_trump_train)
     label_train_hillary = ['Clinton'] * len(list_hillary_train)
     
-    list_trump_val = create_validation_set("tweets_DonaldTrump_2009-2017_16k.xlsx",percentage)
-    list_hillary_val = create_validation_set("tweets_HillaryClinton_2013-2017_4k.xlsx",percentage)
+    list_trump_val = create_validation_set("tweets_DonaldTrump_2009-2017_16k.xlsx", percentage)
+    list_hillary_val = create_validation_set("tweets_HillaryClinton_2013-2017_4k.xlsx", percentage)
     label_val_trump = ['Trump'] * len(list_trump_val)
     label_val_hillary = ['Clinton'] * len(list_hillary_val)
-    list_trump_train.append(list_hillary_train)
-    label_train_trump.append(label_train_hillary)
-    list_trump_val.append(list_hillary_val)
-    label_val_trump.append(label_val_hillary)
+    training_set = list_trump_train + list_hillary_train
+    label_train_all = label_train_trump + label_train_hillary
+    validation_set = list_trump_val + list_hillary_val
+    label_val_all = label_val_trump + label_val_hillary
     
-    training_set = make_tuple(list_trump_train,label_train_trump)
-    validation_set = make_tuple(list_trump_val,label_val_trump)
-    random.shuffle(training_set,random.random)
-    random.shuffle(validation_set,random.random)
-    # Should save it but I don't know how
+    training_set = make_tuple(training_set, label_train_all)
+    validation_set = make_tuple(validation_set, label_val_all)
+    random.shuffle(training_set)
+    random.shuffle(validation_set)
+    file = open("training.csv", "w")
+    for tweet in training_set:
+        file.write(str(tweet) + "\n")
+    file.close()
+    file = open("test.csv", "w")
+    for tweet in validation_set:
+        file.write(str(tweet) + "\n")
+    file.close()
+
     #np.savez('sets',training_set,validation_set)
-    return training_set,validation_set
+
+def read_data_save(training_file, test_file):
+    file = open(training_file, "r")
+    training_set = []
+    test_set = []
+
+    for line in file:
+        pass
+
+
+
 
 
 def make_tuple(list1,list2):
@@ -127,14 +158,32 @@ def make_tuple(list1,list2):
         return newlist
     else:
         return None
-            
+
+
+def create_bag_of_word(training_set, dict_trump, dict_hillary):
+    list_bag_of_word = []
+    for tweet, author in training_set:
+        word_list = tweet.split()
+        if author == 'Trump':
+
+            bag_of_word = dict_trump.keys()
+        else:
+            bag_of_word = dict_hillary.keys()
+        for word in word_list:
+            if word in bag_of_word:
+                pass
+        print (bag_of_word)
+        list_bag_of_word.append(bag_of_word)
+    print(list_bag_of_word)
+    return list_bag_of_word
 
 
 ############################
+training_list, value_list, list_trump_train, list_hillary_train = create_data_save()
 
-"""
 words_trump = extract_words(list_trump_train, stopwords)
 words_hillary = extract_words(list_hillary_train, stopwords)
+
 nbr_of_words_trump = len(words_trump)
 nbr_of_words_hillary = len(words_hillary)
 
@@ -145,24 +194,12 @@ occurency_dict_trump = normalize(most_common_words_trump, nbr_of_words_trump)
 occurency_dict_hillary = normalize(most_common_words_hillary, nbr_of_words_hillary)
 
 bag_size = 100  # Maximum bag of words size
-significant_difference = 0.002  # the difference of usage becomes significant when reaching 0.001 % ? To discuss
+significant_difference = 0.000  # the difference of usage becomes significant when reaching 0.001 % ? To discuss
 filtered_trump = words_filter(most_common_words_trump, occurency_dict_trump, occurency_dict_hillary, bag_size, significant_difference)
 filtered_hillary = words_filter(most_common_words_hillary, occurency_dict_hillary, occurency_dict_trump, bag_size, significant_difference)
+create_bag_of_word(training_list, filtered_trump, filtered_hillary)
 
-#print (filtered_trump)
-print (most_common_words_trump)
-#print (filtered_hillary)
-"""
-create_data_save()
-"""
-vectorizer = CountVectorizer(analyzer = "word",   \
-                             tokenizer = None,    \
-                             preprocessor = None, \
-                             stop_words = None,   \
-                             max_features = 200)
-bow = vectorizer.fit_transform(words)
-print (vectorizer.get_feature_names())
-# Numpy arrays are easy to work with, so convert the result to an
-# array
-bow = bow.toarray()
-print (bow[0])"""
+"""print ("Filtered Trump : " + str(filtered_trump) + "\n")
+print ("Filtered hillary : " + str(filtered_hillary) + "\n")"""
+
+

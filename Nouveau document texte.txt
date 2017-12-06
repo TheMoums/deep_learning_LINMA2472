@@ -1,0 +1,9 @@
+Xavier thought the meeting was today that I've made it with him face to face.
+Here is what I've noted down :
+- Drag and drop : He thinks it's quite important for the client so he wants us to do it.
+- Student vew : We need to limit the scroll view with a little '+' button that displays the rest of the tree
+- ORM : Not mandatory but relevant to put a modified version of it in the report
+- Mockups : Old mockups 'useless', we have to show real screenshot of the website (already done)
+- Modules : We have to mention where each important function is located in the code
+- Tests : Worth a lot of points. Explain if tests are branch or line coverage.
+- Sequence diagram : Only show interesting situation (not a login).
