@@ -1,4 +1,5 @@
 #  -*- coding: utf-8 -*-
+import csv
 import re
 import string
 from numpy import *
@@ -9,10 +10,6 @@ import unicodedata
 
 
 stemmer = nltk.SnowballStemmer("english", ignore_stopwords=True)  # Better stemming
-
-
-def remove_control_chars(s):
-    return control_char_re.sub('', s)
 
 ##############################################
 
@@ -60,37 +57,34 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 
 #############################
 
-def create_bag_of_word(training_set, dict_trump, dict_hillary):
+def create_bag_of_word(training_set, final_dict):
     list_bag_of_word = []
-    for tweet, author in training_set:
+    for tweet in training_set:
         word_list = tweet.split()
-        if author == 'Trump':
-
-            bag_of_word = dict_trump.keys()
-        else:
-            bag_of_word = dict_hillary.keys()
+        bag_of_word = dict.fromkeys(final_dict.keys(), 0)
         for word in word_list:
-            if word in bag_of_word:
-                pass
-        print (bag_of_word)
-        list_bag_of_word.append(bag_of_word)
-    print(list_bag_of_word)
+            stemmed_word = stemmer.stem(word)
+            if stemmed_word in bag_of_word:
+                bag_of_word[stemmed_word] += 1
+        list_bag_of_word.append(list(bag_of_word.values()))
     return list_bag_of_word
 
 
 ############################
 # tweets = sys.argv[1]
-file = open("training.csv", "r")
 training_list = []
 list_trump_train = []
 list_hillary_train = []
-for line in file:
-    print(line)
+label_list = []
+file = open("training.csv", "r")
+reader = csv.reader(file, delimiter=';')
+for tweet, author in reader:
     training_list.append(tweet)
     if author == 'Trump':
-        list_trump_train.append((tweet, author))
+        list_trump_train.append(tweet)
     else:
-        list_hillary_train.append((tweet, author))
+        list_hillary_train.append(tweet)
+    label_list.append(author)
 file.close()
 
 words_trump = extract_words(list_trump_train, stopwords)
@@ -110,9 +104,12 @@ significant_difference = 0.000  # the difference of usage becomes significant wh
 filtered_trump = words_filter(most_common_words_trump, occurency_dict_trump, occurency_dict_hillary, bag_size, significant_difference)
 filtered_hillary = words_filter(most_common_words_hillary, occurency_dict_hillary, occurency_dict_trump, bag_size, significant_difference)
 
-create_bag_of_word(training_list, filtered_trump, filtered_hillary)
+final_dict = {}
+for d in (filtered_trump, filtered_hillary):
+    final_dict.update(d)
 
-"""print ("Filtered Trump : " + str(filtered_trump) + "\n")
-print ("Filtered hillary : " + str(filtered_hillary) + "\n")"""
+bag_of_words = np.array(create_bag_of_word(training_list, final_dict))
+label_list = np.array(label_list)
+
 
 
