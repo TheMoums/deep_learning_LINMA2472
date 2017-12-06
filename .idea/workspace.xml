@@ -14,8 +14,8 @@
       <file leaf-file-name="simple_classifier.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/simple_classifier.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="740">
-              <caret line="127" column="35" lean-forward="true" selection-start-line="127" selection-start-column="35" selection-end-line="127" selection-end-column="35" />
+            <state relative-caret-position="416">
+              <caret line="77" column="47" lean-forward="true" selection-start-line="77" selection-start-column="47" selection-end-line="77" selection-end-column="47" />
               <folding>
                 <element signature="e#25#35#0" expanded="true" />
               </folding>
@@ -227,8 +227,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/simple_classifier.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="740">
-          <caret line="127" column="35" lean-forward="true" selection-start-line="127" selection-start-column="35" selection-end-line="127" selection-end-column="35" />
+        <state relative-caret-position="416">
+          <caret line="77" column="47" lean-forward="true" selection-start-line="77" selection-start-column="47" selection-end-line="77" selection-end-column="47" />
           <folding>
             <element signature="e#25#35#0" expanded="true" />
           </folding>

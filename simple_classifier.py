@@ -58,7 +58,7 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 
 #############################
 
-def create_bag_of_word(training_set, final_dict, tf_idf, dict_idf = None):
+def create_bag_of_words(training_set, final_dict, tf_idf, dict_idf = None):
     list_bag_of_word = []
     for tweet in training_set:
         word_list = tweet.split()
@@ -73,18 +73,26 @@ def create_bag_of_word(training_set, final_dict, tf_idf, dict_idf = None):
                 bag_of_word[stemmed_word] += 1
         value_list = list(bag_of_word.values())
         if tf_idf and tweet_length != 0:
-            value_list[:] = [x / tweet_length for x in value_list]
+            key_list = list(bag_of_word.keys())
+            for i in range(0, len(value_list)):
+                value_list[i] = (value_list[i] / tweet_length)*dict_idf[key_list[i]]
         list_bag_of_word.append(value_list)
     return list_bag_of_word
 
 
-"""def nbr_containing(training_list, word):
-    for tweet in training_list:
-        if word 
-
-
-def update_dict_idf(training_list, dict_idf):
-    pass"""
+def update_dict_idf(list_trump, list_hillary, final_dict, length):
+    keys = final_dict.keys()
+    dict_idf = dict.fromkeys(final_dict.keys(), 0)
+    keys = list(keys)
+    for key, value in list_trump:
+        if key in keys :
+            dict_idf[key] += value
+    for key, value in list_hillary:
+        if key in keys :
+            dict_idf[key] += value
+    for elem in list(dict_idf.keys()):
+        dict_idf[elem] = np.log10(length/(dict_idf[elem]))
+    return dict_idf
 ############################
 
 
@@ -119,15 +127,14 @@ def generate_bag_of_words(training_list, label_list, tf_idf=False):
     final_dict = {}
     for d in (filtered_trump, filtered_hillary):
         final_dict.update(d)
-    """if tf_idf:
-        dict_idf = dict.fromkeys(final_dict.keys(), 0)
-        update_dict_idf(training_list, dict_idf)
-        bag_of_words = create_bag_of_word(training_list, final_dict, tf_idf, dict_idf)
-    else:"""
-    bag_of_words = np.array(create_bag_of_word(training_list, final_dict, tf_idf))
+    if tf_idf:
+        dict_idf = update_dict_idf(most_common_words_trump[0:bag_size+1], most_common_words_hillary[0:bag_size+1], final_dict, len(training_list))
+        bag_of_words = create_bag_of_words(training_list, final_dict, tf_idf, dict_idf)
+    else:
+        bag_of_words = np.array(create_bag_of_words(training_list, final_dict, tf_idf))
     return bag_of_words, final_dict
 
 
 training_list, label_list = read_file.read_files()
-print(generate_bag_of_words(training_list, label_list))
+print(generate_bag_of_words(training_list, label_list, True))
 
