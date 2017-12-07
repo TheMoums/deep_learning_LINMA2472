@@ -58,7 +58,7 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 
 #############################
 
-def create_bag_of_word(training_set, final_dict, tf_idf, dict_idf = None):
+def create_bag_of_word(training_set, final_dict, tf_idf=False, dict_idf = None):
     list_bag_of_word = []
     for tweet in training_set:
         word_list = tweet.split()
@@ -71,7 +71,7 @@ def create_bag_of_word(training_set, final_dict, tf_idf, dict_idf = None):
                 tweet_length -= 1
             elif stemmed_word in bag_of_word:
                 bag_of_word[stemmed_word] += 1
-        value_list = list(bag_of_word.values())
+        value_list = [float(x) for x in bag_of_word.values())]
         if tf_idf and tweet_length != 0:
             value_list[:] = [x / tweet_length for x in value_list]
         list_bag_of_word.append(value_list)
@@ -128,6 +128,6 @@ def generate_bag_of_words(training_list, label_list, tf_idf=False):
     return bag_of_words, final_dict
 
 
-training_list, label_list = read_file.read_files()
-print(generate_bag_of_words(training_list, label_list))
+#training_list, label_list = read_file.read_files()
+#print(generate_bag_of_words(training_list, label_list))
 
