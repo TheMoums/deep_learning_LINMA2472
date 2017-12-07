@@ -2,6 +2,7 @@ import tensorflow as tf
 from   tensorflow.examples.tutorials.mnist import input_data
 import shutil
 import os
+import read_file
 import simple_classifier
 class DeepNeuralNetwork:
     # Reference : 
@@ -138,7 +139,8 @@ class DeepNeuralNetwork:
 
 # example : 
 
-
+train_set = {'x' : train_set_features, 'label' : [np.array([float(s == 'Trump'),1-int(s == 'Trump')]) for s in train_set_raw['label']]}
+test_set = {'x' : test_set_features, 'label' : [np.array([float(s == 'Trump'),1-int(s == 'Trump')]) for s in test_set_raw['label']]}
 train_set = {'x' : , 'label' : mnist.train.labels}
 test_set  = {'x' : mnist.test.images,  'label' : mnist.test.labels}
 

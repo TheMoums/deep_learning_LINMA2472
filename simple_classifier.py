@@ -6,7 +6,6 @@ from numpy import *
 import numpy as np
 import nltk
 from collections import Counter, defaultdict
-import unicodedata
 import read_file
 
 
@@ -50,7 +49,7 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 
 #############################
 
-def create_bag_of_word(training_set, final_dict, tf_idf=False, dict_idf = None):
+def create_bow_by_dict(training_set, final_dict, tf_idf=False):
     """Internal function to to create the bow.
      Apply tfidf if tf_idf is set to True"""
     list_bag_of_word = []
@@ -69,7 +68,7 @@ def create_bag_of_word(training_set, final_dict, tf_idf=False, dict_idf = None):
         if tf_idf and tweet_length != 0:
             key_list = list(bag_of_word.keys())
             for i in range(0, len(value_list)):
-                value_list[i] = (value_list[i] / tweet_length)*dict_idf[key_list[i]]  # Apply tf idf formula on all words
+                value_list[i] = (value_list[i] / tweet_length)*final_dict[key_list[i]]  # Apply tfidf formula on all words
         list_bag_of_word.append(value_list)  # Add the list to create the bag of word
     return list_bag_of_word
 
@@ -77,7 +76,7 @@ def create_bag_of_word(training_set, final_dict, tf_idf=False, dict_idf = None):
 def create_dict_idf(list_trump, list_hillary, final_dict, length):
     """Creates a dict that assigns an IDF value to each word"""
     keys = final_dict.keys()
-    dict_idf = dict.fromkeys(final_dict.keys(), 0)  # The dict we will return
+    dict_idf = dict.fromkeys(keys, 0)  # The dict we will return
     keys = list(keys)
     for key, value in list_trump:  # Assign to dict[key] the number of tweets where the word 'key' appears
         if key in keys:
@@ -120,13 +119,13 @@ def generate_bow(training_list, label_list, tf_idf=False):
     for d in (dict_trump, dict_hillary):
         final_dict.update(d)
     if tf_idf:
-        dict_idf = create_dict_idf(most_common_words_trump[0:bag_size+1], most_common_words_hillary[0:bag_size+1], final_dict, len(training_list))
-        bag_of_words = create_bag_of_words(training_list, final_dict, tf_idf, dict_idf)
+        final_dict = create_dict_idf(most_common_words_trump[0:bag_size+1], most_common_words_hillary[0:bag_size+1], final_dict, len(training_list))
+        bag_of_words = create_bow_by_dict(training_list, final_dict, tf_idf)
     else:
-        bag_of_words = np.array(create_bag_of_words(training_list, final_dict, tf_idf))
+        bag_of_words = np.array(create_bow_by_dict(training_list, final_dict, tf_idf))
     return bag_of_words, final_dict
 
 
-training_list, label_list = read_file.read_files()
-print(generate_bow(training_list, label_list, True))
+"""training_raw = read_file.read_files("training.csv")
+print(generate_bow(training_raw["x"], training_raw["label"], True))"""
 

@@ -1,13 +1,14 @@
 import csv
 
 
-def read_files():
+def read_files(filename):
     training_list = []
     label_list = []
-    file = open("training.csv", "r")
+    file = open(filename, "r")
     reader = csv.reader(file, delimiter=';')
     for tweet, author in reader:
         training_list.append(tweet)
         label_list.append(author)
     file.close()
-    return training_list, label_list
+
+    return {'x': training_list, 'label': label_list}
