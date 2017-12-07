@@ -14,12 +14,28 @@ stemmer = nltk.SnowballStemmer("english", ignore_stopwords=True)  # Initialize s
 ##############################################
 
 
-def extract_words(list_tweets, stopwords):
+def extract_words(list_tweets, stopwords,stem_option=True,stopwords_option=True):
     """Extract the words for the tweets. These are stemmed and ignored if stopword"""
-    list_words = []
-    for tweet in list_tweets:
-        list_words += tweet.split()
-    return [stemmer.stem(w) for w in list_words if not stemmer.stem(w) in stopwords]  # Not optimal to stem two times
+    list_words = []    
+    if stem_option and stopwords_option:
+        for tweet in list_tweets:
+            list_words += tweet.split()
+        return [stemmer.stem(w) for w in list_words if not stemmer.stem(w) in stopwords]# Not optimal to stem two times
+    elif stem_option: # stem but no stopwords
+        for tweet in list_tweets:
+            list_words += tweet.split()
+        return [stemmer.stem(w) for w in list_words]
+    elif stopwords_option: #stopwords but no stem
+        for tweet in list_tweets:
+            list_words += tweet.split()
+        return [w for w in list_words if not stemmer.stem(w) in stopwords]
+    else: #no stem neither stopwords
+        for tweet in list_tweets:
+            list_words += tweet.split()
+        return [w for w in list_words]
+        
+        
+            
 
 
 def normalize(occurency_list, total, bag_size):
@@ -49,7 +65,7 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 
 #############################
 
-def create_bow_by_dict(training_set, final_dict, tf_idf=False):
+def create_bow_by_dict(training_set, final_dict, tf_idf=False,stem=True,stopwords=True):
     """Internal function to to create the bow.
      Apply tfidf if tf_idf is set to True"""
     list_bag_of_word = []
@@ -73,7 +89,7 @@ def create_bow_by_dict(training_set, final_dict, tf_idf=False):
     return list_bag_of_word
 
 
-def create_dict_idf(list_trump, list_hillary, final_dict, length):
+def create_dict_idf(list_trump, list_hillary, final_dict, length,stem=True,stopwords=True):
     """Creates a dict that assigns an IDF value to each word"""
     keys = final_dict.keys()
     dict_idf = dict.fromkeys(keys, 0)  # The dict we will return
@@ -90,7 +106,7 @@ def create_dict_idf(list_trump, list_hillary, final_dict, length):
 ############################
 
 
-def generate_bow(training_list, label_list, tf_idf=False):
+def generate_bow(training_list, label_list, tf_idf=False,stem_option=True,stopwords_option=True):
     """Creates the bag of word"""
     list_trump_train = []
     list_hillary_train = []
@@ -101,9 +117,9 @@ def generate_bow(training_list, label_list, tf_idf=False):
         else:
             list_hillary_train.append(tweet)  # List of Hillary's tweets
         index += 1
-
-    words_trump = extract_words(list_trump_train, stopwords)  # Extract the words from the tweets
-    words_hillary = extract_words(list_hillary_train, stopwords)
+    
+    words_trump = extract_words(list_trump_train, stopwords,stem_option,stopwords_option)  # Extract the words from the tweets
+    words_hillary = extract_words(list_hillary_train, stopwords,stem_option,stopwords_option)
 
     nbr_of_words_trump = len(words_trump)  # Number of words Trump used
     nbr_of_words_hillary = len(words_hillary)
