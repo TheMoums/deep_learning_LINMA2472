@@ -23,25 +23,15 @@ def extract_words(list_tweets, stopwords):
     return [stemmer.stem(w) for w in list_words if not stemmer.stem(w) in stopwords]  # Not optimal to stem two times
 
 
-def normalize(occurency_list, total):
+def normalize(occurency_list, total, bag_size):
     """Normalize the word occurency by the number of tweets from its author"""
     dictionnary = {}
     for key, value in occurency_list:
-        dictionnary[key] = value / total
-    return dictionnary
-
-
-def words_filter(sorted_list, dict_1, dict_2, size, threshold):
-    """sorted_list is the list of words sorted by occurency.
-    Returns a dictionary with the "size" first elements of sorted_list that are 'significantly' more used in dict_1 than
-    in dict_2"""
-    filtered_dict = {}
-    for key, value in sorted_list:
-        if len(filtered_dict) > size:
+        if len(dictionnary) > bag_size:
             break
-        elif key not in dict_2 or abs(dict_1[key] - dict_2[key]) > threshold:
-            filtered_dict[key] = dict_1[key]
-    return filtered_dict
+        else:
+            dictionnary[key] = value / total
+    return dictionnary
 
 
 stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself',
@@ -122,16 +112,12 @@ def generate_bow(training_list, label_list, tf_idf=False):
     most_common_words_trump = Counter(words_trump).most_common()  # List of Trump's tweets sorted by occurency
     most_common_words_hillary = Counter(words_hillary).most_common()  # List of Hillary's tweets sorted by occurency
 
-    occurency_dict_trump = normalize(most_common_words_trump, nbr_of_words_trump)  # Normalize the occurency
-    occurency_dict_hillary = normalize(most_common_words_hillary, nbr_of_words_hillary)
-
     bag_size = 100  # Maximum bag of words size
-    significant_difference = 0.000  # the difference of usage becomes significant when reaching 0.001 %
-    filtered_trump = words_filter(most_common_words_trump, occurency_dict_trump, occurency_dict_hillary, bag_size, significant_difference)
-    filtered_hillary = words_filter(most_common_words_hillary, occurency_dict_hillary, occurency_dict_trump, bag_size, significant_difference)
+    dict_trump = normalize(most_common_words_trump, nbr_of_words_trump, bag_size)  # Normalize the occurency
+    dict_hillary = normalize(most_common_words_hillary, nbr_of_words_hillary, bag_size)
 
     final_dict = {}  # The most common words used by Hillary and Trump
-    for d in (filtered_trump, filtered_hillary):
+    for d in (dict_trump, dict_hillary):
         final_dict.update(d)
     if tf_idf:
         dict_idf = create_dict_idf(most_common_words_trump[0:bag_size+1], most_common_words_hillary[0:bag_size+1], final_dict, len(training_list))
