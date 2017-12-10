@@ -85,16 +85,17 @@ from keras.layers import LSTM
 from keras.layers import Dropout
 from keras.callbacks import EarlyStopping
 from keras import regularizers
+from keras.utils import plot_model
 
 """first simple definition"""
 #model definition
 print("First model : ")
 #architecture
 model = Sequential()
-model.add(Conv1D(128, 3, activation='relu', input_shape=(seq_length,300)))
-model.add(GlobalMaxPooling1D())
-model.add(Dense(1, activation='sigmoid'))
-
+model.add(Conv1D(128, 3, activation='relu', input_shape=(seq_length,300), name="Convolution"))
+model.add(GlobalMaxPooling1D(name="Pooling"))
+model.add(Dense(1, activation='sigmoid', name="Output"))
+model.summary()
 
 #loss function and optimizer
 model.compile(loss='binary_crossentropy',
@@ -108,8 +109,9 @@ model.fit(x_train, y_train, batch_size=50, epochs=10, callbacks=[earlyStopping],
 
 score = model.evaluate(x_test,y_test, batch_size=64)
 
-#display accuracy
+#display accuracy and plot model
 print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
+plot_model(model, to_file="model1.png", show_shapes=True, show_layer_names=True)
 
 
 """second definition, closer to the article,
@@ -118,32 +120,30 @@ print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
 print("Second model : ")
 #definition of a convolutionnal layer
 # with different kernel size
-inp = Input(shape=(seq_length,300))
+inp = Input(shape=(seq_length,300), name="Convolution_Input")
 convs = []
 #1
-conv = Conv1D(100, 3, activation='relu')(inp)
-pool = GlobalMaxPooling1D()(conv)
+conv = Conv1D(100, 3, activation='relu', name="Convolution_Ker_Size3")(inp)
+pool = GlobalMaxPooling1D(name="Global_Pooling1")(conv)
 convs.append(pool)
 #2
-conv = Conv1D(100, 4, activation='relu')(inp)
-pool = GlobalMaxPooling1D()(conv)
+conv = Conv1D(100, 4, activation='relu', name="Convolution_Ker_Size4")(inp)
+pool = GlobalMaxPooling1D(name="Global_Pooling2")(conv)
 convs.append(pool)
 #3
-conv = Conv1D(100, 5, activation='relu')(inp)
-pool = GlobalMaxPooling1D()(conv)
+conv = Conv1D(100, 5, activation='relu', name="Convolution_Ker_Size5")(inp)
+pool = GlobalMaxPooling1D(name="Global_Pooling3")(conv)
 convs.append(pool)
-out = Concatenate()(convs)
+out = Concatenate(name="Merge")(convs)
 
 conv_model = Model(inputs=inp, outputs=out)
 
 #architecture
 model = Sequential()
-#model.add(Conv1D(128, 3, activation='relu', input_shape=(seq_length,300)))
-#model.add(GlobalMaxPooling1D())
 model.add(conv_model)
-model.add(Dropout(0.5))
-model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01)))
-
+model.add(Dropout(0.5, name="Dropout"))
+model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01), name="Output"))
+model.summary()
 
 #loss function and optimizer
 model.compile(loss='binary_crossentropy',
@@ -157,42 +157,21 @@ model.fit(x_train, y_train, batch_size=50, epochs=10, callbacks=[earlyStopping],
 
 score = model.evaluate(x_test,y_test, batch_size=64)
 
-#display accuracy
+#display accuracy and plot model
 print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
+plot_model(model, to_file="model2.png", show_shapes=True, show_layer_names=True)
 
 
 """third definition, with one dense layer added at the end"""
 #model definition
 print("Third model : ")
-#definition of a convolutionnal layer
-# with different kernel size
-inp = Input(shape=(seq_length,300))
-convs = []
-#1
-conv = Conv1D(100, 3, activation='relu')(inp)
-pool = GlobalMaxPooling1D()(conv)
-convs.append(pool)
-#2
-conv = Conv1D(100, 4, activation='relu')(inp)
-pool = GlobalMaxPooling1D()(conv)
-convs.append(pool)
-#3
-conv = Conv1D(100, 5, activation='relu')(inp)
-pool = GlobalMaxPooling1D()(conv)
-convs.append(pool)
-out = Concatenate()(convs)
-
-conv_model = Model(inputs=inp, outputs=out)
-
 #architecture
 model = Sequential()
-#model.add(Conv1D(128, 3, activation='relu', input_shape=(seq_length,300)))
-#model.add(GlobalMaxPooling1D())
 model.add(conv_model)
-model.add(Dropout(0.5))
-model.add(Dense(20, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01)))
-
+model.add(Dropout(0.5, name="Dropout"))
+model.add(Dense(20, activation='relu', kernel_regularizer=regularizers.l2(0.01), name="Intermediate_Dense"))
+model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01), name="Output"))
+model.summary()
 
 #loss function and optimizer
 model.compile(loss='binary_crossentropy',
@@ -206,8 +185,9 @@ model.fit(x_train, y_train, batch_size=50, epochs=10, callbacks=[earlyStopping],
 
 score = model.evaluate(x_test,y_test, batch_size=64)
 
-#display accuracy
+#display accuracy and plot model
 print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
+plot_model(model, to_file="model3.png", show_shapes=True, show_layer_names=True)
 
 
 """fourth definition, with two stacked LSTM"""
@@ -215,11 +195,10 @@ print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
 print("Fourth model : ")
 #architecture
 model = Sequential()
-#model.add(Conv1D(128, 3, activation='relu', input_shape=(seq_length,300)))
-#model.add(GlobalMaxPooling1D())
-model.add(LSTM(64, return_sequences=True,input_shape=(seq_length,300)))
-model.add(LSTM(32))
-model.add(Dense(1, activation='sigmoid'))
+model.add(LSTM(64, return_sequences=True,input_shape=(seq_length,300), name="First_Stacked_LSTM"))
+model.add(LSTM(32, name="Second_Stacked_LSTM"))
+model.add(Dense(1, activation='sigmoid', name="Output"))
+model.summary()
 
 #loss function and optimizer
 model.compile(loss='binary_crossentropy',
@@ -233,5 +212,6 @@ model.fit(x_train, y_train, batch_size=50, epochs=20, callbacks=[earlyStopping],
 
 score = model.evaluate(x_test,y_test, batch_size=64)
 
-#display accuracy
+#display accuracy and plot model
 print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
+plot_model(model, to_file="model4.png", show_shapes=True, show_layer_names=True)
