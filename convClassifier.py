@@ -78,17 +78,20 @@ print(x_test.shape)
 """
     Model definition and optimization
 """
-from keras.models import Sequential
-from keras.layers import Dense
+from keras.models import Sequential,Model
+from keras.layers import Input,Dense,Merge
 from keras.layers import Conv1D, GlobalMaxPooling1D
+from keras.layers import Dropout
 from keras.callbacks import EarlyStopping
 
+"""first simple definition"""
 #model definition
 #architecture
 model = Sequential()
-model.add(Conv1D(64, 3, activation='relu', input_shape=(seq_length,300)))
+model.add(Conv1D(128, 3, activation='relu', input_shape=(seq_length,300)))
 model.add(GlobalMaxPooling1D())
 model.add(Dense(1, activation='sigmoid'))
+
 
 #loss function and optimizer
 model.compile(loss='binary_crossentropy',
@@ -97,7 +100,107 @@ model.compile(loss='binary_crossentropy',
 
 #optimization with early stopping
 earlyStopping = EarlyStopping(monitor='val_acc', patience=0, verbose=0, mode='auto')
-model.fit(x_train, y_train, batch_size=64, epochs=10, callbacks=[earlyStopping], 
+model.fit(x_train, y_train, batch_size=50, epochs=10, callbacks=[earlyStopping], 
+          validation_split=0.1, shuffle=True)
+
+score = model.evaluate(x_test,y_test, batch_size=64)
+
+#display
+print("\n\nscore : "+str(score))
+print(str(model.metrics_names))
+gc.collect()
+
+"""second definition, closer to the article,
+    with multiple kernel sizes and Dropout"""
+#model definition
+
+#definition of a convolutionnal layer
+# with different kernel size
+inp = Input(shape=(seq_length,300))
+convs = []
+#1
+conv = Conv1D(100, 3, activation='relu')(inp)
+pool = GlobalMaxPooling1D()(conv)
+convs.append(pool)
+#2
+conv = Conv1D(100, 4, activation='relu')(inp)
+pool = GlobalMaxPooling1D()(conv)
+convs.append(pool)
+#3
+conv = Conv1D(100, 5, activation='relu')(inp)
+pool = GlobalMaxPooling1D()(conv)
+convs.append(pool)
+out = Merge(mode='concat')(convs)
+
+conv_model = Model(input=inp, output=out)
+
+#architecture
+model = Sequential()
+#model.add(Conv1D(128, 3, activation='relu', input_shape=(seq_length,300)))
+#model.add(GlobalMaxPooling1D())
+model.add(conv_model)
+model.add(Dropout(0.5))
+model.add(Dense(1, activation='sigmoid'))
+
+
+#loss function and optimizer
+model.compile(loss='binary_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
+
+#optimization with early stopping
+earlyStopping = EarlyStopping(monitor='val_acc', patience=0, verbose=0, mode='auto')
+model.fit(x_train, y_train, batch_size=50, epochs=10, callbacks=[earlyStopping], 
+          validation_split=0.1, shuffle=True)
+
+score = model.evaluate(x_test,y_test, batch_size=64)
+
+#display
+print("\n\nscore : "+str(score))
+print(str(model.metrics_names))
+gc.collect()
+
+"""third definition, with one dense layer added"""
+#model definition
+
+#definition of a convolutionnal layer
+# with different kernel size
+inp = Input(shape=(seq_length,300))
+convs = []
+#1
+conv = Conv1D(100, 3, activation='relu')(inp)
+pool = GlobalMaxPooling1D()(conv)
+convs.append(pool)
+#2
+conv = Conv1D(100, 4, activation='relu')(inp)
+pool = GlobalMaxPooling1D()(conv)
+convs.append(pool)
+#3
+conv = Conv1D(100, 5, activation='relu')(inp)
+pool = GlobalMaxPooling1D()(conv)
+convs.append(pool)
+out = Merge(mode='concat')(convs)
+
+conv_model = Model(input=inp, output=out)
+
+#architecture
+model = Sequential()
+#model.add(Conv1D(128, 3, activation='relu', input_shape=(seq_length,300)))
+#model.add(GlobalMaxPooling1D())
+model.add(conv_model)
+model.add(Dropout(0.5))
+model.add(Dense(20, activation='relu'))
+model.add(Dense(1, activation='sigmoid'))
+
+
+#loss function and optimizer
+model.compile(loss='binary_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
+
+#optimization with early stopping
+earlyStopping = EarlyStopping(monitor='val_acc', patience=0, verbose=0, mode='auto')
+model.fit(x_train, y_train, batch_size=50, epochs=10, callbacks=[earlyStopping], 
           validation_split=0.1, shuffle=True)
 
 score = model.evaluate(x_test,y_test, batch_size=64)
