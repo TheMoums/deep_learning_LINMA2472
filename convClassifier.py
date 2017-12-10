@@ -57,8 +57,8 @@ Test_dataset = create_dataset('test.csv')
 x_test = Test_dataset['x']
 y_test = Test_dataset['label']
 
+#what is the length of the maximal sequence of words (for padding)
 seq_length = max(max([x.shape[0] for x in x_train]), max([x.shape[0] for x in x_test]))
-print(seq_length)
 
 def zero_padding(X):
     for i in range(len(X)):
@@ -68,9 +68,9 @@ zero_padding(x_train)
 zero_padding(x_test)
 
 x_train = np.array(x_train)
-print(x_train.shape)
+#print(x_train.shape)
 x_test = np.array(x_test)
-print(x_test.shape)
+#print(x_test.shape)
 
 
 
@@ -79,13 +79,16 @@ print(x_test.shape)
     Model definition and optimization
 """
 from keras.models import Sequential,Model
-from keras.layers import Input,Dense,Merge
-from keras.layers import Conv1D, GlobalMaxPooling1D
+from keras.layers import Input,Dense
+from keras.layers import Conv1D, GlobalMaxPooling1D,Concatenate
+from keras.layers import LSTM
 from keras.layers import Dropout
 from keras.callbacks import EarlyStopping
+from keras import regularizers
 
 """first simple definition"""
 #model definition
+print("First model : ")
 #architecture
 model = Sequential()
 model.add(Conv1D(128, 3, activation='relu', input_shape=(seq_length,300)))
@@ -105,15 +108,14 @@ model.fit(x_train, y_train, batch_size=50, epochs=10, callbacks=[earlyStopping],
 
 score = model.evaluate(x_test,y_test, batch_size=64)
 
-#display
-print("\n\nscore : "+str(score))
-print(str(model.metrics_names))
-gc.collect()
+#display accuracy
+print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
+
 
 """second definition, closer to the article,
-    with multiple kernel sizes and Dropout"""
+    with multiple kernel sizes, Dropout and a l2 regularizer"""
 #model definition
-
+print("Second model : ")
 #definition of a convolutionnal layer
 # with different kernel size
 inp = Input(shape=(seq_length,300))
@@ -130,9 +132,9 @@ convs.append(pool)
 conv = Conv1D(100, 5, activation='relu')(inp)
 pool = GlobalMaxPooling1D()(conv)
 convs.append(pool)
-out = Merge(mode='concat')(convs)
+out = Concatenate()(convs)
 
-conv_model = Model(input=inp, output=out)
+conv_model = Model(inputs=inp, outputs=out)
 
 #architecture
 model = Sequential()
@@ -140,7 +142,7 @@ model = Sequential()
 #model.add(GlobalMaxPooling1D())
 model.add(conv_model)
 model.add(Dropout(0.5))
-model.add(Dense(1, activation='sigmoid'))
+model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01)))
 
 
 #loss function and optimizer
@@ -155,14 +157,13 @@ model.fit(x_train, y_train, batch_size=50, epochs=10, callbacks=[earlyStopping],
 
 score = model.evaluate(x_test,y_test, batch_size=64)
 
-#display
-print("\n\nscore : "+str(score))
-print(str(model.metrics_names))
-gc.collect()
+#display accuracy
+print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
 
-"""third definition, with one dense layer added"""
+
+"""third definition, with one dense layer added at the end"""
 #model definition
-
+print("Third model : ")
 #definition of a convolutionnal layer
 # with different kernel size
 inp = Input(shape=(seq_length,300))
@@ -179,9 +180,9 @@ convs.append(pool)
 conv = Conv1D(100, 5, activation='relu')(inp)
 pool = GlobalMaxPooling1D()(conv)
 convs.append(pool)
-out = Merge(mode='concat')(convs)
+out = Concatenate()(convs)
 
-conv_model = Model(input=inp, output=out)
+conv_model = Model(inputs=inp, outputs=out)
 
 #architecture
 model = Sequential()
@@ -189,8 +190,8 @@ model = Sequential()
 #model.add(GlobalMaxPooling1D())
 model.add(conv_model)
 model.add(Dropout(0.5))
-model.add(Dense(20, activation='relu'))
-model.add(Dense(1, activation='sigmoid'))
+model.add(Dense(20, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+model.add(Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01)))
 
 
 #loss function and optimizer
@@ -205,7 +206,32 @@ model.fit(x_train, y_train, batch_size=50, epochs=10, callbacks=[earlyStopping],
 
 score = model.evaluate(x_test,y_test, batch_size=64)
 
-#display
-print("\n\nscore : "+str(score))
-print(str(model.metrics_names))
-gc.collect()
+#display accuracy
+print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
+
+
+"""fourth definition, with two stacked LSTM"""
+#model definition
+print("Fourth model : ")
+#architecture
+model = Sequential()
+#model.add(Conv1D(128, 3, activation='relu', input_shape=(seq_length,300)))
+#model.add(GlobalMaxPooling1D())
+model.add(LSTM(64, return_sequences=True,input_shape=(seq_length,300)))
+model.add(LSTM(32))
+model.add(Dense(1, activation='sigmoid'))
+
+#loss function and optimizer
+model.compile(loss='binary_crossentropy',
+              optimizer='rmsprop',
+              metrics=['accuracy'])
+
+#optimization with early stopping
+earlyStopping = EarlyStopping(monitor='val_acc', patience=0, verbose=0, mode='auto')
+model.fit(x_train, y_train, batch_size=50, epochs=20, callbacks=[earlyStopping], 
+          validation_split=0.1, shuffle=True)
+
+score = model.evaluate(x_test,y_test, batch_size=64)
+
+#display accuracy
+print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
