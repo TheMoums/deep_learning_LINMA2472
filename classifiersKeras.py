@@ -17,7 +17,7 @@ To run this file you will need :
     -keras
     For model visualization (optionnal just comment "plot_model()" call if you do not need it:
     -pydot
-    -graphiz (apt-get graphiz, not the anaconda package)
+    -graphiz (apt-get graphviz, not the anaconda package)
 
 @author: brieuc
 """
