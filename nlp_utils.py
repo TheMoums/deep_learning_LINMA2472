@@ -62,7 +62,7 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 #############################
 
 def create_bow_by_dict(text_set, final_dict, tf_idf=False, stem_option=True, stopwords_option=True):
-    """Internal function to to create the bow.
+    """Create a bag of word using the words dictionary final_dict
      Apply tfidf if tf_idf is set to True"""
     list_bag_of_word = []
     for tweet in text_set:
@@ -91,22 +91,28 @@ def create_dict_idf(list_trump, list_hillary, final_dict, length):
     keys = final_dict.keys()
     dict_idf = dict.fromkeys(keys, 0)  # The dict we will return
     keys = list(keys)
+    
     for key, value in list_trump:  # Assign to dict[key] the number of tweets where the word 'key' appears
         if key in keys:
             dict_idf[key] += value
+
     for key, value in list_hillary:
         if key in keys:
             dict_idf[key] += value
+
     for elem in list(dict_idf.keys()):
         dict_idf[elem] = np.log10(length/(dict_idf[elem]))  # Apply idf definition
+
     return dict_idf
 
 
-def generate_bow(training_list, label_list, tf_idf=False, stem_option=True, stopwords_option=True):
-    """Creates the bag of word"""
+def create_words_dict(training_list, label_list, tf_idf=False, stem_option=True, stopwords_option=True):
+    """Creates the dictionary of words used for the bag of words"""
+    
     list_trump_train = []
     list_hillary_train = []
     index = 0
+    
     for tweet in training_list:
         if label_list[index] == 'Trump':
             list_trump_train.append(tweet)  # List of Trump's tweets
@@ -130,14 +136,9 @@ def generate_bow(training_list, label_list, tf_idf=False, stem_option=True, stop
     final_dict = {}  # The most common words used by Hillary and Trump
     for d in (dict_trump, dict_hillary):
         final_dict.update(d)
+    
     if tf_idf:
         final_dict = create_dict_idf(most_common_words_trump[0:bag_size+1], most_common_words_hillary[0:bag_size+1], final_dict, len(training_list))
-        bag_of_words = create_bow_by_dict(training_list, final_dict, tf_idf)
-    else:
-        bag_of_words = np.array(create_bow_by_dict(training_list, final_dict, tf_idf))
-    return bag_of_words, final_dict
-
-
-training_raw = read_file.read_files("training.csv")
-print(generate_bow(training_raw["x"], training_raw["label"], True, False, True))
+    
+    return final_dict
 
