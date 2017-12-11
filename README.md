@@ -1,1 +1,1 @@
-deep_learning_LINMA2472
+dep_learning_LINMA2472
