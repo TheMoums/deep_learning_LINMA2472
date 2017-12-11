@@ -3,8 +3,22 @@
 """
 Created on Sat Dec  9 21:49:22 2017
 
-Convolutionnal classifier using an embedding  for the words
-    and Keras 
+Convolutionnal and stacked LSTM classifiers using an embedding for the words
+    provided by Word2Vec applied on google-news articles
+    and Keras for the model formulations
+
+To run this file you will need :
+    -numpy
+    for the embedding :
+        -gensim
+        -Word2Vec google-news embedding, it can be found here https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM/edit 
+    
+    For model formulation and optimization:
+    -keras
+    For model visualization (optionnal just comment "plot_model()" call if you do not need it:
+    -pydot
+    -graphiz (apt-get graphiz, not the anaconda package)
+
 @author: brieuc
 """
 
@@ -137,6 +151,7 @@ convs.append(pool)
 out = Concatenate(name="Merge")(convs)
 
 conv_model = Model(inputs=inp, outputs=out)
+conv_model.summary()
 
 #architecture
 model = Sequential()
