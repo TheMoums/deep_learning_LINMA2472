@@ -177,7 +177,7 @@ print("\nAccuracy on the test set : "+str(score[1])+"\n\n")
 plot_model(model, to_file="model2.png", show_shapes=True, show_layer_names=True)
 
 
-"""third definition, with one dense layer added at the end"""
+"""third definition, with one dense layer added at the end""" 
 #model definition
 print("Third model : ")
 #architecture
