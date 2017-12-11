@@ -49,34 +49,36 @@ def make_tuple(list1,list2):
     else:
         return None
 
+def create_training_test_set():    
+    percentage = 0.05
+
+    list_trump_train = create_training_set("tweets_DonaldTrump_2009-2017_16k.xlsx", percentage)
+    list_hillary_train = create_training_set("tweets_HillaryClinton_2013-2017_4k.xlsx", percentage)
+    label_train_trump = ['Trump'] * len(list_trump_train)
+    label_train_hillary = ['Clinton'] * len(list_hillary_train)
+
+    list_trump_val = create_validation_set("tweets_DonaldTrump_2009-2017_16k.xlsx", percentage)
+    list_hillary_val = create_validation_set("tweets_HillaryClinton_2013-2017_4k.xlsx", percentage)
+    label_val_trump = ['Trump'] * len(list_trump_val)
+    label_val_hillary = ['Clinton'] * len(list_hillary_val)
+    training_set = list_trump_train + list_hillary_train
+    label_train_all = label_train_trump + label_train_hillary
+    validation_set = list_trump_val + list_hillary_val
+    label_val_all = label_val_trump + label_val_hillary
+
+    training_set = make_tuple(training_set, label_train_all)
+    validation_set = make_tuple(validation_set, label_val_all)
+    random.shuffle(training_set)
+    random.shuffle(validation_set)
     
-percentage = 0.05
-
-list_trump_train = create_training_set("tweets_DonaldTrump_2009-2017_16k.xlsx", percentage)
-list_hillary_train = create_training_set("tweets_HillaryClinton_2013-2017_4k.xlsx", percentage)
-label_train_trump = ['Trump'] * len(list_trump_train)
-label_train_hillary = ['Clinton'] * len(list_hillary_train)
-
-list_trump_val = create_validation_set("tweets_DonaldTrump_2009-2017_16k.xlsx", percentage)
-list_hillary_val = create_validation_set("tweets_HillaryClinton_2013-2017_4k.xlsx", percentage)
-label_val_trump = ['Trump'] * len(list_trump_val)
-label_val_hillary = ['Clinton'] * len(list_hillary_val)
-training_set = list_trump_train + list_hillary_train
-label_train_all = label_train_trump + label_train_hillary
-validation_set = list_trump_val + list_hillary_val
-label_val_all = label_val_trump + label_val_hillary
-
-training_set = make_tuple(training_set, label_train_all)
-validation_set = make_tuple(validation_set, label_val_all)
-random.shuffle(training_set)
-random.shuffle(validation_set)
-file = open("training.csv", "w")
-writer = csv.writer(file, delimiter=';', lineterminator='\n')
-for (tweet, author) in training_set:
-    writer.writerow([tweet, author])
-file.close()
-file = open("test.csv", "w")
-writer = csv.writer(file, delimiter=';', lineterminator='\n')
-for (tweet, author) in validation_set:
-    writer.writerow([tweet, author])
-file.close()
+    file = open("training.csv", "w")
+    writer = csv.writer(file, delimiter=';', lineterminator='\n')
+    for (tweet, author) in training_set:
+        writer.writerow([tweet, author])
+    file.close()
+    file = open("test.csv", "w")
+    writer = csv.writer(file, delimiter=';', lineterminator='\n')
+    for (tweet, author) in validation_set:
+        writer.writerow([tweet, author])
+    file.close()
+    

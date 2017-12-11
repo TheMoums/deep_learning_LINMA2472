@@ -1,5 +1,4 @@
-#  -*- coding: utf-8 -*-
-import csv
+#  -*- coding: utf-8 -*- import csv
 import re
 import string
 from numpy import *
@@ -62,11 +61,11 @@ stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you',
 
 #############################
 
-def create_bow_by_dict(training_set, final_dict, tf_idf=False, stem_option=True, stopwords_option=True):
+def create_bow_by_dict(text_set, final_dict, tf_idf=False, stem_option=True, stopwords_option=True):
     """Internal function to to create the bow.
      Apply tfidf if tf_idf is set to True"""
     list_bag_of_word = []
-    for tweet in training_set:
+    for tweet in text_set:
         word_list = tweet.split()
         bag_of_word = dict.fromkeys(final_dict.keys(), 0)
         tweet_length = 0  # the length of the tweet
